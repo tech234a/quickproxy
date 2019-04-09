@@ -1,7 +1,7 @@
 quickproxy
 ==========
 
-A lightweight, asynchronous, programmable HTTP proxy for python. Built with Tornado.
+A lightweight, asynchronous, programmable HTTP proxy for Python. Built with Tornado. Now with Python 3 support.
 
 ## Use
 
