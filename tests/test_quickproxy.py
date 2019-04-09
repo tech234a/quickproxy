@@ -3,7 +3,7 @@ import unittest
 import os
 import time
 import shlex
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import threading
 import subprocess
 
@@ -59,8 +59,8 @@ class TestQuickProxy(unittest.TestCase):
         proxy = {}
         if proxy_port:
             proxy = {'http': 'localhost:%d' % proxy_port}
-        proxy_support = urllib2.ProxyHandler(proxy)
-        opener = urllib2.build_opener(proxy_support)
+        proxy_support = urllib.request.ProxyHandler(proxy)
+        opener = urllib.request.build_opener(proxy_support)
         return opener.open(requrl).read()
 
 
