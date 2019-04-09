@@ -1,8 +1,8 @@
 import os
 import sys
-import urlparse
+import urllib.parse
 import pprint
-import Cookie
+import http.cookies
 import datetime
 import dateutil.parser
 from copy import copy
@@ -89,14 +89,14 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
             # and sometimes it just contains the path. :(
 
             url = request.uri
-            if not url.startswith(u'http'):
-                url = u"{proto}://{netloc}{path}".format(
+            if not url.startswith('http'):
+                url = "{proto}://{netloc}{path}".format(
                     proto=request.protocol,
                     netloc=request.host,
                     path=request.uri
                 )
 
-            parsedurl = urlparse.urlparse(url)
+            parsedurl = urllib.parse.urlparse(url)
 
             # create request object
 
@@ -130,7 +130,7 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
             if obj.username or parsedurl.username or \
                 obj.password or parsedurl.password:
 
-                auth = u"{username}:{password}@".format(
+                auth = "{username}:{password}@".format(
                     username=obj.username or parsedurl.username,
                     password=obj.password or parsedurl.password
                 )
@@ -138,14 +138,14 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
             else:
                 auth = ''
 
-            url = u"{proto}://{auth}{host}{port}{path}{query}{frag}"
+            url = "{proto}://{auth}{host}{port}{path}{query}{frag}"
             url = url.format(
                 proto=obj.protocol,
                 auth=auth,
                 host=obj.host,
-                port=(u':' + str(obj.port)) if (obj.port and obj.port != 80) else u'',
-                path=u'/'+obj.path.lstrip(u'/') if obj.path else u'',
-                query=u'?'+obj.query.lstrip(u'?') if obj.query else u'',
+                port=(':' + str(obj.port)) if (obj.port and obj.port != 80) else '',
+                path='/'+obj.path.lstrip('/') if obj.path else '',
+                query='?'+obj.query.lstrip('?') if obj.query else '',
                 frag=obj.fragment
             )
 
@@ -164,13 +164,13 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
         def handle_request(self, request):
 
             if debug_level >= 4:
-                print "<<<<<<<< REQUEST <<<<<<<<"
+                print("<<<<<<<< REQUEST <<<<<<<<")
                 pprint.pprint(request.__dict__)
 
             requestobj, parsedurl = self.make_requestobj(request)
 
             if debug_level >= 3:
-                print "<<<<<<<< REQUESTOBJ <<<<<<<<"
+                print("<<<<<<<< REQUESTOBJ <<<<<<<<")
                 pprint.pprint(requestobj.__dict__)
 
             if debug_level >= 1:
@@ -185,17 +185,17 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
                 return
 
             if debug_level >= 1:
-                print debugstr + "to %s:%d%s" % (modrequestobj.host, 
+                print(debugstr + "to %s:%d%s" % (modrequestobj.host, 
                                                  modrequestobj.port or 80,
-                                                 modrequestobj.path)
+                                                 modrequestobj.path))
 
             outreq = self.make_request(modrequestobj, parsedurl)
 
             if debug_level >= 2:
-                print ">>>>>>>> REQUEST >>>>>>>>"
-                print "%s %s" % (outreq.method, outreq.url)
-                for k, v in outreq.headers.items():
-                    print "%s: %s" % (k, v)
+                print(">>>>>>>> REQUEST >>>>>>>>")
+                print("%s %s" % (outreq.method, outreq.url))
+                for k, v in list(outreq.headers.items()):
+                    print("%s: %s" % (k, v))
 
             # send the request
 
@@ -221,7 +221,7 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
 
             if not isinstance(response, ResponseObj):
                 if debug_level >= 4:
-                    print "<<<<<<<< RESPONSE <<<<<<<"
+                    print("<<<<<<<< RESPONSE <<<<<<<")
                     pprint.pprint(response.__dict__)
 
                 responseobj = ResponseObj(
@@ -235,7 +235,7 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
                 responseobj = response
 
             if debug_level >= 3:
-                print "<<<<<<<< RESPONSEOBJ <<<<<<<"
+                print("<<<<<<<< RESPONSEOBJ <<<<<<<")
                 responseprint = copy(responseobj)
                 responseprint.body = "-- body content not displayed --"
                 pprint.pprint(responseprint.__dict__)
@@ -258,12 +258,12 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
             # set the response headers
 
             if type(mod.pass_headers) == bool:
-                header_keys = mod.headers.keys() if mod.pass_headers else []
+                header_keys = list(mod.headers.keys()) if mod.pass_headers else []
             else:
                 header_keys = mod.pass_headers
             for key in header_keys:
                 if key.lower() == "set-cookie":
-                    cookies = Cookie.BaseCookie()
+                    cookies = http.cookies.BaseCookie()
                     cookies.load(tornado.escape.native_str(mod.headers.get(key)))
                     for cookie_key in cookies:
                         cookie = cookies[cookie_key]
@@ -282,11 +282,11 @@ def _make_proxy(methods, req_callback, resp_callback, err_callback, debug_level=
                     self.set_header(key, val)
 
             if debug_level >= 2:
-                print ">>>>>>>> RESPONSE (%s) >>>>>>>" % mod.code
-                for k, v in self._headers.items():
-                    print "%s: %s" % (k, v)
+                print(">>>>>>>> RESPONSE (%s) >>>>>>>" % mod.code)
+                for k, v in list(self._headers.items()):
+                    print("%s: %s" % (k, v))
                 if hasattr(self, '_new_cookie'):
-                    print self._new_cookie.output()
+                    print(self._new_cookie.output())
 
             # set the response body
 
@@ -377,7 +377,7 @@ def run_proxy(port,
     http_server.listen(port)     
     ioloop = tornado.ioloop.IOLoop.instance()
     if start_ioloop:
-        print ("Starting HTTP proxy on port %d" % port)
+        print(("Starting HTTP proxy on port %d" % port))
         ioloop.start()
     return app
 
@@ -387,5 +387,5 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
 
-    print ("Starting HTTP proxy on port %d" % port)
+    print(("Starting HTTP proxy on port %d" % port))
     run_proxy(port)
